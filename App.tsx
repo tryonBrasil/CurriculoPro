@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ResumeData, TemplateId, Experience, Education, Skill, Language, Course } from './types';
 import { INITIAL_RESUME_DATA, MOCK_RESUME_DATA } from './constants';
@@ -172,7 +171,7 @@ const App: React.FC = () => {
             <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-100 rotate-3">
                <i className="fas fa-file-invoice text-lg"></i>
             </div>
-            <h1 className="font-black text-2xl tracking-tighter text-slate-800 uppercase italic">FIDELIDADE<span className="text-blue-600">CV</span></h1>
+            <h1 className="font-black text-2xl tracking-tighter text-slate-800 uppercase italic">Curriculo<span className="text-blue-600">BR</span></h1>
           </div>
           <button 
             onClick={() => { setData(MOCK_RESUME_DATA); setView('editor'); }}
@@ -223,7 +222,7 @@ const App: React.FC = () => {
         </main>
 
         <footer className="relative z-10 py-12 border-t border-slate-50 flex flex-col items-center gap-4">
-          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.5em]">Gerador de Currículos Fidelidade</p>
+          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.5em]">Gerador de Currículos CurriculoBR</p>
         </footer>
       </div>
     );
@@ -244,7 +243,7 @@ const App: React.FC = () => {
           <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
              <i className="fas fa-file-invoice text-sm"></i>
           </div>
-          <h1 className="font-extrabold text-xl tracking-tighter text-slate-800 uppercase italic">FIDELIDADE<span className="text-blue-600">CV</span></h1>
+          <h1 className="font-extrabold text-xl tracking-tighter text-slate-800 uppercase italic">Curriculo<span className="text-blue-600">BR</span></h1>
         </div>
         <div className="hidden lg:flex items-center gap-8">
            <div className="flex items-center gap-3">
@@ -422,6 +421,7 @@ const App: React.FC = () => {
         </div>
 
         <div ref={previewContainerRef} className="flex-1 bg-slate-100 relative items-start justify-center overflow-y-auto pt-12 pb-24 paper-texture custom-scrollbar">
+           {/* CLASSE print-container ADICIONADA AQUI PARA ISOLAMENTO NA IMPRESSÃO */}
            <div className="print-container origin-top transition-transform duration-300 ease-out" style={{ transform: `scale(${previewScale})` }}>
               <div className="bg-white shadow-2xl ring-1 ring-slate-200">
                 <ResumePreview data={data} template={template} onSectionClick={handleSectionClick} />
