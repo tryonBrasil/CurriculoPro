@@ -483,7 +483,7 @@ const App: React.FC = () => {
               <AdBanner />
            </div>
 
-           <div className="p-6 border-t border-slate-50 flex items-center justify-between gap-4 shrink-0">
+           <div className="p-6 border-t border-slate-50 flex items-center justify-between gap-4 shrink-0 no-print">
               <button 
                 onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))} 
                 className={`flex-1 py-3 font-bold text-[10px] uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all ${currentStep === 0 ? 'invisible' : ''}`}
@@ -499,7 +499,7 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        <div ref={previewContainerRef} className="flex-1 bg-slate-100 relative items-start justify-center overflow-y-auto pt-12 pb-24 paper-texture custom-scrollbar">
+        <div ref={previewContainerRef} className="flex-1 bg-slate-100 relative items-start justify-center overflow-y-auto pt-12 pb-24 paper-texture custom-scrollbar no-print-container-parent">
            <div className="print-container origin-top transition-transform duration-300 ease-out" style={{ transform: `scale(${previewScale})` }}>
               <div className="bg-white shadow-2xl ring-1 ring-slate-200">
                 <ResumePreview data={data} template={template} onSectionClick={handleSectionClick} />
@@ -507,7 +507,7 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        <div className="no-print w-[320px] border-l border-slate-100 bg-white flex flex-col shrink-0 z-40">
+        <div className="no-print w-[320px] border-l border-slate-100 bg-white flex flex-col shrink-0 z-40 no-print-sidebar">
            <div className="p-6 border-b border-slate-50">
               <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
                 <i className="fas fa-palette text-blue-600"></i> Estilos
