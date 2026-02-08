@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ResumeData, TemplateId, Experience, Education, Skill, Language, Course } from './types';
 import { INITIAL_RESUME_DATA, MOCK_RESUME_DATA } from './constants';
@@ -45,10 +46,12 @@ const STEPS = [
 
 const TEMPLATES = [
   { id: 'modern_blue', label: 'Modern Blue', color: 'bg-[#1e40af]', desc: 'Clean & Professional' },
+  { id: 'classic_serif', label: 'Classic Serif', color: 'bg-[#1a1a1a]', desc: 'Traditional & Elegant' },
+  { id: 'swiss_minimal', label: 'Swiss Minimal', color: 'bg-[#f8fafc]', desc: 'Clean Modern Design' },
+  { id: 'executive_navy', label: 'Executive Navy', color: 'bg-[#0f172a]', desc: 'High-Level Professional' },
   { id: 'teal_sidebar', label: 'Teal Sidebar', color: 'bg-[#2D4F4F]', desc: 'Modern Corporate' },
   { id: 'executive_red', label: 'Executive Red', color: 'bg-[#800000]', desc: 'Senior Leadership' },
   { id: 'corporate_gray', label: 'Corporate Gray', color: 'bg-[#334155]', desc: 'Minimalist Pro' },
-  { id: 'minimal_red_line', label: 'Minimal Red', color: 'bg-[#D32F2F]', desc: 'Minimalist Plus' },
 ];
 
 type AppView = 'home' | 'editor';
@@ -60,6 +63,7 @@ const App: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [previewScale, setPreviewScale] = useState(0.55);
   const [isEnhancing, setIsEnhancing] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
@@ -183,17 +187,24 @@ const App: React.FC = () => {
   const resetZoom = () => {
     if (!previewContainerRef.current) return;
     const containerHeight = previewContainerRef.current.clientHeight;
-    const scale = (containerHeight - 80) / 1123;
-    setPreviewScale(Math.min(0.8, Math.max(0.4, scale)));
+    const containerWidth = previewContainerRef.current.clientWidth;
+    const scaleY = (containerHeight - 80) / 1123;
+    const scaleX = (containerWidth - 80) / 794; 
+    const bestScale = Math.min(scaleX, scaleY);
+    setPreviewScale(Math.min(1.0, Math.max(0.3, bestScale)));
   };
 
   useEffect(() => {
     if (view === 'editor') {
-      setTimeout(resetZoom, 100);
+      resetZoom();
+      const timer = setTimeout(resetZoom, 300);
       window.addEventListener('resize', resetZoom);
+      return () => {
+        window.removeEventListener('resize', resetZoom);
+        clearTimeout(timer);
+      };
     }
-    return () => window.removeEventListener('resize', resetZoom);
-  }, [view]);
+  }, [view, isSidebarOpen]);
 
   if (view === 'home') {
     return (
@@ -297,32 +308,32 @@ const App: React.FC = () => {
       </nav>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="no-print w-[480px] flex flex-col border-r border-slate-100 bg-white z-40 shrink-0">
+        <div className="no-print w-[420px] flex flex-col border-r border-slate-100 bg-white z-40 shrink-0 shadow-xl">
            <div className="flex overflow-x-auto border-b border-slate-50 shrink-0 custom-scrollbar bg-slate-50/50">
              {STEPS.map((step, idx) => (
-               <button key={step.id} onClick={() => setCurrentStep(idx)} className={`flex-1 min-w-[80px] py-4 flex flex-col items-center gap-2 transition-all relative ${currentStep === idx ? 'text-blue-600' : 'text-slate-400 grayscale'}`}>
+               <button key={step.id} onClick={() => setCurrentStep(idx)} className={`flex-1 min-w-[70px] py-4 flex flex-col items-center gap-2 transition-all relative ${currentStep === idx ? 'text-blue-600 bg-white' : 'text-slate-400 grayscale hover:bg-white/50'}`}>
                  <i className={`fas ${step.icon} text-xs`}></i>
                  <span className="text-[8px] font-bold uppercase tracking-widest">{step.label}</span>
-                 {currentStep === idx && <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-blue-600 rounded-full"></div>}
+                 {currentStep === idx && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>}
                </button>
              ))}
            </div>
 
-           <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+           <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
               {activeTab === 'info' && (
                 <div className="animate-in slide-in-from-bottom-2 duration-300">
-                  <h2 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-tight">Informações Pessoais</h2>
+                  <h2 className="text-lg font-black text-slate-900 mb-6 uppercase tracking-tight">Informações Pessoais</h2>
                   
                   <div className="mb-8 flex flex-col items-center">
                     <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                       <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100 flex items-center justify-center">
+                       <div className="w-28 h-28 rounded-3xl overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100 flex items-center justify-center">
                          {data.personalInfo.photoUrl ? (
                            <img src={data.personalInfo.photoUrl} className="w-full h-full object-cover" alt="Perfil" />
                          ) : (
                            <i className="fas fa-user text-3xl text-slate-300"></i>
                          )}
                        </div>
-                       <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold uppercase text-center p-2">
+                       <div className="absolute inset-0 bg-blue-600/60 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold uppercase text-center p-2">
                           Alterar Foto
                        </div>
                     </div>
@@ -345,8 +356,8 @@ const App: React.FC = () => {
               {activeTab === 'experience' && (
                 <div className="animate-in slide-in-from-bottom-2 duration-300">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Experiências</h2>
-                    <button onClick={() => addItem('experiences')} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase shadow-sm">+ Adicionar</button>
+                    <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Experiências</h2>
+                    <button onClick={() => addItem('experiences')} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase shadow-sm hover:bg-blue-700 transition-colors">+ Adicionar</button>
                   </div>
                   {data.experiences?.map(exp => (
                     <div key={exp.id} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-6 relative group border-l-4 border-l-blue-400">
@@ -370,10 +381,10 @@ const App: React.FC = () => {
                           </button>
                         </div>
                         <textarea 
-                          className="w-full p-4 rounded-xl border text-sm h-32 outline-none focus:ring-1 focus:ring-blue-500 bg-white" 
+                          className="w-full p-4 rounded-xl border text-sm h-32 outline-none focus:ring-1 focus:ring-blue-500 bg-white shadow-inner" 
                           value={exp.description} 
                           onChange={(e) => updateItem('experiences', exp.id, 'description', e.target.value)} 
-                          placeholder="Descreva suas principais conquistas e responsabilidades..."
+                          placeholder="Descreva suas principais conquistas..."
                         />
                       </div>
                     </div>
@@ -384,7 +395,7 @@ const App: React.FC = () => {
               {activeTab === 'education' && (
                 <div className="animate-in slide-in-from-bottom-2 duration-300">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Formação</h2>
+                    <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Formação</h2>
                     <button onClick={() => addItem('education')} className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg font-bold text-[10px] uppercase">+ Adicionar</button>
                   </div>
                   {data.education?.map(edu => (
@@ -404,7 +415,7 @@ const App: React.FC = () => {
               {activeTab === 'skills' && (
                 <div className="animate-in slide-in-from-bottom-2 duration-300">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Habilidades</h2>
+                    <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Habilidades</h2>
                     <button 
                         onClick={async () => {
                             if (!data.personalInfo.jobTitle || isEnhancing) return;
@@ -423,7 +434,7 @@ const App: React.FC = () => {
                   <div className="flex flex-wrap gap-2">
                     {data.skills?.map(s => (
                       <div key={s.id} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 group hover:border-blue-300 transition-all shadow-sm">
-                        <input className="bg-transparent border-none outline-none text-xs font-bold text-slate-600 w-28" value={s.name} onChange={(e) => updateItem('skills', s.id, 'name', e.target.value)} placeholder="Ex: Liderança" />
+                        <input className="bg-transparent border-none outline-none text-xs font-bold text-slate-600 w-24" value={s.name} onChange={(e) => updateItem('skills', s.id, 'name', e.target.value)} placeholder="Habilidade" />
                         <button onClick={() => removeItem('skills', s.id)} className="text-slate-300 hover:text-red-400"><i className="fas fa-times text-[10px]"></i></button>
                       </div>
                     ))}
@@ -435,7 +446,7 @@ const App: React.FC = () => {
               {activeTab === 'summary' && (
                 <div className="animate-in slide-in-from-bottom-2 duration-300">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Resumo Profissional</h2>
+                    <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Resumo Profissional</h2>
                     <div className="flex gap-4">
                         <button 
                             onClick={handleGenerateSummary}
@@ -444,20 +455,13 @@ const App: React.FC = () => {
                         >
                             <i className={`fas ${isEnhancing === 'summary-gen' ? 'fa-circle-notch fa-spin' : 'fa-wand-magic-sparkles'}`}></i> Redigir IA
                         </button>
-                        <button 
-                            onClick={() => handleEnhance(data.summary, 'resumo profissional', undefined, 'summary')}
-                            disabled={!data.summary || isEnhancing === 'summary'}
-                            className="text-blue-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
-                        >
-                            <i className={`fas ${isEnhancing === 'summary' ? 'fa-circle-notch fa-spin' : 'fa-magic'}`}></i> Melhorar IA
-                        </button>
                     </div>
                   </div>
                   <textarea 
                     className="w-full p-6 rounded-2xl border text-sm h-64 outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed bg-slate-50 shadow-inner custom-scrollbar" 
                     value={data.summary} 
                     onChange={(e) => setData(prev => ({ ...prev, summary: e.target.value }))} 
-                    placeholder="Escreva uma breve apresentação sobre sua carreira e principais objetivos..." 
+                    placeholder="Escreva uma breve apresentação..." 
                   />
                 </div>
               )}
@@ -466,7 +470,7 @@ const App: React.FC = () => {
                 <div className="animate-in slide-in-from-bottom-2 duration-300 space-y-8">
                   <div>
                     <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Idiomas</h2>
+                      <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Idiomas</h2>
                       <button onClick={() => addItem('languages')} className="text-blue-600 font-bold text-[10px] uppercase tracking-widest">+ Novo</button>
                     </div>
                     {data.languages?.map(l => (
@@ -499,40 +503,48 @@ const App: React.FC = () => {
            </div>
         </div>
 
-        <div ref={previewContainerRef} className="flex-1 bg-slate-100 relative items-start justify-center overflow-y-auto pt-12 pb-24 paper-texture custom-scrollbar no-print-container-parent">
-           <div className="print-container origin-top transition-transform duration-300 ease-out" style={{ transform: `scale(${previewScale})` }}>
-              <div className="bg-white shadow-2xl ring-1 ring-slate-200">
+        <div ref={previewContainerRef} className="flex-1 bg-[#f1f5f9] relative flex items-center justify-center overflow-hidden paper-texture no-print-container-parent transition-all duration-300">
+           <button 
+             onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+             className="absolute bottom-6 right-6 no-print w-12 h-12 bg-white shadow-xl rounded-full flex items-center justify-center text-slate-600 hover:text-blue-600 z-[60] border border-slate-100 transition-transform active:scale-90"
+             title={isSidebarOpen ? "Expandir Prévia" : "Ver Estilos"}
+           >
+             <i className={`fas ${isSidebarOpen ? 'fa-expand' : 'fa-palette'}`}></i>
+           </button>
+
+           <div className="print-container transition-transform duration-300 ease-out flex items-center justify-center" style={{ transform: `scale(${previewScale})` }}>
+              <div className="bg-white shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-slate-200">
                 <ResumePreview data={data} template={template} onSectionClick={handleSectionClick} />
               </div>
            </div>
         </div>
 
-        <div className="no-print w-[320px] border-l border-slate-100 bg-white flex flex-col shrink-0 z-40 no-print-sidebar">
-           <div className="p-6 border-b border-slate-50">
-              <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+        <div className={`no-print border-l border-slate-100 bg-white flex flex-col shrink-0 z-40 no-print-sidebar transition-all duration-300 ease-in-out shadow-2xl overflow-hidden ${isSidebarOpen ? 'w-[320px] opacity-100' : 'w-0 opacity-0'}`}>
+           <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+              <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                 <i className="fas fa-palette text-blue-600"></i> Estilos
               </h2>
-              
-              <div className="flex items-center justify-between gap-2 p-2 bg-slate-50 rounded-xl mb-4">
-                <button onClick={() => setPreviewScale(p => Math.max(0.3, p - 0.05))} className="w-8 h-8 rounded-lg hover:bg-white text-slate-400 hover:text-slate-600 transition-all"><i className="fas fa-search-minus text-[10px]"></i></button>
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">{Math.round(previewScale * 100)}%</div>
-                <button onClick={() => setPreviewScale(p => Math.min(1.2, p + 0.05))} className="w-8 h-8 rounded-lg hover:bg-white text-slate-400 hover:text-slate-600 transition-all"><i className="fas fa-search-plus text-[10px]"></i></button>
-              </div>
+              <button onClick={() => setIsSidebarOpen(false)} className="text-slate-300 hover:text-slate-600 transition-colors">
+                <i className="fas fa-chevron-right text-xs"></i>
+              </button>
+           </div>
 
-              <button onClick={() => setData(MOCK_RESUME_DATA)} className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all">
+           <div className="p-6 border-b border-slate-50 space-y-4">
+              <button onClick={() => setData(MOCK_RESUME_DATA)} className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100/50">
                 Preencher com Exemplo
               </button>
            </div>
 
            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Escolha o Modelo</h3>
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Selecione um Template</h3>
               <div className="space-y-3">
                  {TEMPLATES.map(t => (
-                   <button key={t.id} onClick={() => setTemplate(t.id as TemplateId)} className={`w-full p-4 rounded-2xl border-2 transition-all flex flex-col gap-2 group ${template === t.id ? 'border-blue-600 bg-blue-50/50' : 'border-slate-50 hover:border-slate-200'}`}>
+                   <button key={t.id} onClick={() => setTemplate(t.id as TemplateId)} className={`w-full p-4 rounded-2xl border-2 transition-all flex flex-col gap-2 group ${template === t.id ? 'border-blue-600 bg-blue-50/50 shadow-inner' : 'border-slate-50 hover:border-slate-200'}`}>
                       <div className="flex items-center gap-4 w-full">
-                        <div className={`w-8 h-8 ${t.color} rounded-lg shadow-lg shrink-0 group-hover:scale-110 transition-transform`}></div>
+                        <div className={`w-10 h-10 ${t.color} rounded-xl shadow-lg shrink-0 group-hover:rotate-6 transition-all`}></div>
                         <div className="text-left flex-1">
-                          <p className={`text-[10px] font-black uppercase ${template === t.id ? 'text-blue-700' : 'text-slate-700'}`}>{t.label}</p>
+                          <p className={`text-[10px] font-black uppercase tracking-tight ${template === t.id ? 'text-blue-700' : 'text-slate-700'}`}>{t.label}</p>
+                          <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">{t.desc}</p>
                         </div>
                         {template === t.id && <i className="fas fa-check-circle text-blue-600 text-xs"></i>}
                       </div>
