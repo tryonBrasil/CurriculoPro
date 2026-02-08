@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7,16 +8,12 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1895006161330485" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        window.process = window.process || { env: {} };
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #2563eb;
         }
 
-        /* REGRAS DE IMPRESSÃO - FIX PDF */
         @media print {
             @page {
                 size: A4;
@@ -32,12 +29,10 @@
                 print-color-adjust: exact !important;
             }
 
-            /* Esconde TUDO que não é a área de impressão */
             .no-print, nav, aside, footer, button, .adsbygoogle, .no-print-sidebar { 
                 display: none !important; 
             }
 
-            /* Força o container de impressão a ser o único visível e centralizado */
             .print-container {
                 display: block !important;
                 position: fixed !important;
@@ -83,6 +78,19 @@
         }
         .animate-in {
             animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes sectionHighlight {
+            0% { background-color: rgba(37, 99, 235, 0.1); transform: scale(1.02); }
+            100% { background-color: transparent; transform: scale(1); }
+        }
+        .section-highlight {
+            animation: sectionHighlight 1s ease-out;
+            border-radius: 1rem;
+        }
+
+        .font-serif-premium {
+            font-family: 'Playfair Display', serif;
         }
     </style>
 <script type="importmap">

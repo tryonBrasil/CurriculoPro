@@ -59,4 +59,4 @@ export interface ResumeData {
   courses: Course[];
 }
 
-export type TemplateId = 'teal_sidebar' | 'executive_red' | 'corporate_gray' | 'minimal_red_line' | 'modern_blue' | 'classic_serif' | 'swiss_minimal' | 'executive_navy';
+export type TemplateId = 'teal_sidebar' | 'executive_red' | 'corporate_gray' | 'minimal_red_line' | 'modern_blue' | 'classic_serif' | 'swiss_minimal' | 'executive_navy' | 'modern_vitae';
