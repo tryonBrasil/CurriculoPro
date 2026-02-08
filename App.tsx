@@ -4,6 +4,7 @@ import { INITIAL_RESUME_DATA, MOCK_RESUME_DATA } from './constants';
 import Input from './components/Input';
 import ResumePreview from './components/ResumePreview';
 import PhotoCropModal from './components/PhotoCropModal';
+import { enhanceText, generateSummary, suggestSkills } from './services/geminiService';
 
 declare var adsbygoogle: any;
 
@@ -43,10 +44,11 @@ const STEPS = [
 ];
 
 const TEMPLATES = [
-  { id: 'teal_sidebar', label: 'Teal Sidebar', color: 'bg-[#8BA9A4]', desc: 'Elegante com barra lateral' },
-  { id: 'executive_red', label: 'Executive Red', color: 'bg-[#800000]', desc: 'Moderno e impactante' },
-  { id: 'corporate_gray', label: 'Corporate Gray', color: 'bg-[#666666]', desc: 'Profissional clássico' },
-  { id: 'minimal_red_line', label: 'Minimal Red', color: 'bg-[#D32F2F]', desc: 'Limpo e minimalista' },
+  { id: 'modern_blue', label: 'Modern Blue', color: 'bg-[#1e40af]', desc: 'Clean & Professional' },
+  { id: 'teal_sidebar', label: 'Teal Sidebar', color: 'bg-[#2D4F4F]', desc: 'Modern Corporate' },
+  { id: 'executive_red', label: 'Executive Red', color: 'bg-[#800000]', desc: 'Senior Leadership' },
+  { id: 'corporate_gray', label: 'Corporate Gray', color: 'bg-[#334155]', desc: 'Minimalist Pro' },
+  { id: 'minimal_red_line', label: 'Minimal Red', color: 'bg-[#D32F2F]', desc: 'Minimalist Plus' },
 ];
 
 type AppView = 'home' | 'editor';
@@ -54,9 +56,10 @@ type AppView = 'home' | 'editor';
 const App: React.FC = () => {
   const [view, setView] = useState<AppView>('home');
   const [data, setData] = useState<ResumeData>(INITIAL_RESUME_DATA);
-  const [template, setTemplate] = useState<TemplateId>('teal_sidebar');
+  const [template, setTemplate] = useState<TemplateId>('modern_blue');
   const [currentStep, setCurrentStep] = useState(0);
   const [previewScale, setPreviewScale] = useState(0.55);
+  const [isEnhancing, setIsEnhancing] = useState<string | null>(null);
   
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
@@ -134,6 +137,38 @@ const App: React.FC = () => {
       ...prev,
       [listName]: (prev[listName] as any[]).map(item => item.id === id ? { ...item, [field]: value } : item)
     }));
+  };
+
+  const handleEnhance = async (text: string, context: string, listName?: any, id?: string) => {
+    if (!text || isEnhancing) return;
+    setIsEnhancing(id || context);
+    try {
+      const enhanced = await enhanceText(text, context);
+      if (listName && id) {
+        updateItem(listName, id, 'description', enhanced);
+      } else if (context === 'summary') {
+        setData(prev => ({ ...prev, summary: enhanced }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsEnhancing(null);
+    }
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!data.personalInfo.jobTitle || isEnhancing) return;
+    setIsEnhancing('summary-gen');
+    try {
+      const skillNames = data.skills.map(s => s.name);
+      const expPositions = data.experiences.map(e => e.position);
+      const generated = await generateSummary(data.personalInfo.jobTitle, skillNames, expPositions);
+      setData(prev => ({ ...prev, summary: generated }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsEnhancing(null);
+    }
   };
 
   const handleSectionClick = (sectionId: string) => {
@@ -322,8 +357,18 @@ const App: React.FC = () => {
                         <Input label="Início" value={exp.startDate} onChange={(v) => updateItem('experiences', exp.id, 'startDate', v)} placeholder="MM/AAAA" />
                         <Input label="Fim" value={exp.endDate} onChange={(v) => updateItem('experiences', exp.id, 'endDate', v)} placeholder="MM/AAAA ou 'Atual'" />
                       </div>
-                      <div className="mt-2">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase">Suas Atividades</label>
+                      <div className="mt-2 relative">
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Suas Atividades</label>
+                          <button 
+                            onClick={() => handleEnhance(exp.description, 'experiência profissional', 'experiences', exp.id)}
+                            disabled={!exp.description || isEnhancing === exp.id}
+                            className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 transition-all ${!exp.description ? 'text-slate-200' : 'text-blue-500 hover:text-blue-700'}`}
+                          >
+                            <i className={`fas ${isEnhancing === exp.id ? 'fa-circle-notch fa-spin' : 'fa-magic'}`}></i> 
+                            {isEnhancing === exp.id ? 'Melhorando...' : 'Melhorar com IA'}
+                          </button>
+                        </div>
                         <textarea 
                           className="w-full p-4 rounded-xl border text-sm h-32 outline-none focus:ring-1 focus:ring-blue-500 bg-white" 
                           value={exp.description} 
@@ -358,7 +403,23 @@ const App: React.FC = () => {
 
               {activeTab === 'skills' && (
                 <div className="animate-in slide-in-from-bottom-2 duration-300">
-                  <h2 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-tight">Habilidades</h2>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Habilidades</h2>
+                    <button 
+                        onClick={async () => {
+                            if (!data.personalInfo.jobTitle || isEnhancing) return;
+                            setIsEnhancing('skills-gen');
+                            try {
+                                const suggested = await suggestSkills(data.personalInfo.jobTitle);
+                                const newSkills = suggested.map(name => ({ id: Math.random().toString(36).substr(2, 9), name, level: 'Intermediate' as any }));
+                                setData(prev => ({ ...prev, skills: [...prev.skills, ...newSkills].slice(0, 15) }));
+                            } catch (e) {} finally { setIsEnhancing(null); }
+                        }}
+                        className="text-indigo-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
+                    >
+                        <i className={`fas ${isEnhancing === 'skills-gen' ? 'fa-circle-notch fa-spin' : 'fa-lightbulb'}`}></i> Sugerir IA
+                    </button>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {data.skills?.map(s => (
                       <div key={s.id} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 group hover:border-blue-300 transition-all shadow-sm">
@@ -373,7 +434,25 @@ const App: React.FC = () => {
 
               {activeTab === 'summary' && (
                 <div className="animate-in slide-in-from-bottom-2 duration-300">
-                  <h2 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-tight">Resumo Profissional</h2>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Resumo Profissional</h2>
+                    <div className="flex gap-4">
+                        <button 
+                            onClick={handleGenerateSummary}
+                            disabled={!data.personalInfo.jobTitle || isEnhancing === 'summary-gen'}
+                            className="text-indigo-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
+                        >
+                            <i className={`fas ${isEnhancing === 'summary-gen' ? 'fa-circle-notch fa-spin' : 'fa-wand-magic-sparkles'}`}></i> Redigir IA
+                        </button>
+                        <button 
+                            onClick={() => handleEnhance(data.summary, 'resumo profissional', undefined, 'summary')}
+                            disabled={!data.summary || isEnhancing === 'summary'}
+                            className="text-blue-600 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1"
+                        >
+                            <i className={`fas ${isEnhancing === 'summary' ? 'fa-circle-notch fa-spin' : 'fa-magic'}`}></i> Melhorar IA
+                        </button>
+                    </div>
+                  </div>
                   <textarea 
                     className="w-full p-6 rounded-2xl border text-sm h-64 outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed bg-slate-50 shadow-inner custom-scrollbar" 
                     value={data.summary} 
@@ -421,7 +500,6 @@ const App: React.FC = () => {
         </div>
 
         <div ref={previewContainerRef} className="flex-1 bg-slate-100 relative items-start justify-center overflow-y-auto pt-12 pb-24 paper-texture custom-scrollbar">
-           {/* CLASSE print-container ADICIONADA AQUI PARA ISOLAMENTO NA IMPRESSÃO */}
            <div className="print-container origin-top transition-transform duration-300 ease-out" style={{ transform: `scale(${previewScale})` }}>
               <div className="bg-white shadow-2xl ring-1 ring-slate-200">
                 <ResumePreview data={data} template={template} onSectionClick={handleSectionClick} />
